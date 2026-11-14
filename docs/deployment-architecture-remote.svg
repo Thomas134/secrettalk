@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"
+     font-family="Microsoft YaHei, PingFang SC, Noto Sans SC, Source Han Sans SC, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4b5b74"/>
+    </marker>
+    <marker id="arrowTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f7d6d"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b06a1f"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#23324d" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#f4f7fb"/>
+
+  <text x="40" y="52" font-size="28" font-weight="700" fill="#16233a">密语 SecretTalk · 两端浏览器都在外网</text>
+  <text x="40" y="80" font-size="13.5" fill="#5b6b82">服务器机器只跑 cloudflared + 网关 + 5 台中继，不开浏览器；两端各自通过公网域名进入同一房间</text>
+
+  <!-- ============ 浏览器 A ============ -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="112" width="340" height="330" rx="16" fill="#ffffff" stroke="#cfd9ea"/>
+  </g>
+  <rect x="24" y="112" width="8" height="330" rx="4" fill="#2b59ff"/>
+  <text x="48" y="146" font-size="17" font-weight="700" fill="#1c3fa8">你的浏览器</text>
+  <text x="48" y="168" font-size="11.5" fill="#6b7a92">另一台电脑 · 与服务器不在同一台机器</text>
+
+  <rect x="44" y="184" width="300" height="74" rx="10" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="58" y="208" font-size="12" font-weight="700" fill="#1c3fa8">React UI + RelayClient</text>
+  <text x="58" y="228" font-size="11.5" fill="#4b5b74">5 路 wss · 10s 心跳</text>
+  <text x="58" y="246" font-size="11.5" fill="#4b5b74">碎片聚合（任意 3 片）</text>
+
+  <rect x="44" y="270" width="300" height="102" rx="10" fill="#eef3ff" stroke="#c6d5ff"/>
+  <text x="58" y="294" font-size="12" font-weight="700" fill="#1c3fa8">CryptoSession</text>
+  <text x="58" y="314" font-size="11.5" fill="#3d4f6d">ECDH P-256 · HKDF → KEK</text>
+  <text x="58" y="332" font-size="11.5" fill="#3d4f6d">每条消息随机 AES-256-GCM</text>
+  <text x="58" y="350" font-size="11.5" fill="#3d4f6d">SSS(3,5) 拆碎片，KEK 上锁</text>
+
+  <rect x="44" y="386" width="300" height="34" rx="17" fill="#e8f2ec" stroke="#bcd9c7"/>
+  <text x="194" y="408" font-size="11.5" fill="#2f6b48" text-anchor="middle">🔒 明文与密钥只在这里</text>
+
+  <!-- ============ Cloudflare ============ -->
+  <g filter="url(#shadow)">
+    <rect x="590" y="112" width="300" height="330" rx="16" fill="#fff7ec" stroke="#f0c98a"/>
+  </g>
+  <text x="614" y="144" font-size="17" font-weight="700" fill="#8a5310">Cloudflare 边缘</text>
+  <text x="614" y="164" font-size="11.5" fill="#a07a3a">trycloudflare.com（快速隧道）</text>
+
+  <text x="614" y="192" font-size="12" fill="#6d5220">TLS 终结：https / wss</text>
+  <text x="614" y="214" font-size="12" fill="#6d5220">两端都从这里进入</text>
+  <text x="614" y="236" font-size="12" fill="#6d5220">无需公网 IP / 端口映射</text>
+  <text x="614" y="268" font-size="11.5" fill="#a05a1f">能看到：base64 密文 + 元数据</text>
+  <text x="614" y="288" font-size="11.5" fill="#a05a1f">（IP、路径、长度、时间）</text>
+  <text x="614" y="312" font-size="11.5" fill="#2f6b48">看不到：明文（端到端加密）</text>
+  <text x="614" y="342" font-size="11" fill="#a07a3a">域名每次重启都会变</text>
+
+  <!-- ============ 浏览器 B ============ -->
+  <g filter="url(#shadow)">
+    <rect x="1180" y="112" width="340" height="330" rx="16" fill="#ffffff" stroke="#cfd9ea"/>
+  </g>
+  <rect x="1512" y="112" width="8" height="330" rx="4" fill="#2b59ff"/>
+  <text x="1204" y="146" font-size="17" font-weight="700" fill="#1c3fa8">对方浏览器</text>
+  <text x="1204" y="168" font-size="11.5" fill="#6b7a92">手机 / 另一台电脑 · 任何网络</text>
+
+  <rect x="1200" y="184" width="300" height="74" rx="10" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="1214" y="208" font-size="12" font-weight="700" fill="#1c3fa8">React UI + RelayClient</text>
+  <text x="1214" y="228" font-size="11.5" fill="#4b5b74">5 路 wss · 10s 心跳</text>
+  <text x="1214" y="246" font-size="11.5" fill="#4b5b74">碎片聚合（任意 3 片）</text>
+
+  <rect x="1200" y="270" width="300" height="102" rx="10" fill="#eef3ff" stroke="#c6d5ff"/>
+  <text x="1214" y="294" font-size="12" font-weight="700" fill="#1c3fa8">CryptoSession</text>
+  <text x="1214" y="314" font-size="11.5" fill="#3d4f6d">ECDH P-256 · HKDF → KEK</text>
+  <text x="1214" y="332" font-size="11.5" fill="#3d4f6d">每条消息随机 AES-256-GCM</text>
+  <text x="1214" y="350" font-size="11.5" fill="#3d4f6d">SSS(3,5) 拆碎片，KEK 上锁</text>
+
+  <rect x="1200" y="386" width="300" height="34" rx="17" fill="#e8f2ec" stroke="#bcd9c7"/>
+  <text x="1350" y="408" font-size="11.5" fill="#2f6b48" text-anchor="middle">🔒 明文与密钥只在这里</text>
+
+  <!-- ============ 服务器机器 ============ -->
+  <rect x="340" y="466" width="920" height="460" rx="20" fill="#f7faf8" stroke="#b9d3c4" stroke-dasharray="8 6"/>
+  <text x="364" y="500" font-size="16.5" font-weight="700" fill="#2f5d47">服务器机器（Windows）· 不需要开浏览器</text>
+  <text x="364" y="522" font-size="11.5" fill="#5d7f6e">cloudflared + 网关 + 5 台中继；对公网只暴露 Cloudflare 域名</text>
+
+  <!-- cloudflared -->
+  <g filter="url(#shadow)">
+    <rect x="380" y="540" width="840" height="100" rx="14" fill="#e8f6f4" stroke="#b7ded6"/>
+  </g>
+  <text x="404" y="568" font-size="14" font-weight="700" fill="#2f7d6d">cloudflared 隧道客户端</text>
+  <text x="404" y="590" font-size="11.5" fill="#3d5f58">主动连出到 Cloudflare（出站长连接）· 把两端请求转发到 127.0.0.1:8080</text>
+  <text x="404" y="612" font-size="11" fill="#5d8a80">路由器不用开端口，本机不用公网 IP；Ctrl+C 即断开，链接立即失效</text>
+
+  <!-- 网关 -->
+  <g filter="url(#shadow)">
+    <rect x="380" y="672" width="840" height="88" rx="14" fill="#fff8ec" stroke="#efcf9a"/>
+  </g>
+  <text x="404" y="700" font-size="14.5" font-weight="700" fill="#8a5310">单端口网关 :8080</text>
+  <text x="404" y="722" font-size="11.5" fill="#6d5220">静态站点 dist/web + 严格 CSP · /relay/0~4 字节管道（保留文本帧）</text>
+  <text x="404" y="744" font-size="11.5" fill="#6d5220">不解析内容 · 不缓存 · 不落盘；对两端来说都是同一个域名下的 /relay/i</text>
+
+  <!-- 中继 -->
+  <rect x="360" y="790" width="880" height="130" rx="14" fill="#fffdf4" stroke="#e6d3a2" stroke-dasharray="6 5"/>
+  <text x="384" y="818" font-size="12.5" font-weight="700" fill="#8a6a1f">5 台零知识中继（各存 1 个加密碎片 + 同一份密文，TTL 5 分钟）</text>
+
+  <g font-size="11">
+    <rect x="384" y="832" width="160" height="68" rx="9" fill="#ffffff" stroke="#e2c98f"/>
+    <text x="398" y="856" font-size="12.5" font-weight="700" fill="#8a5310">3001</text>
+    <text x="398" y="876" fill="#4b5b74">碎片 #0 + 密文</text>
+
+    <rect x="556" y="832" width="160" height="68" rx="9" fill="#ffffff" stroke="#e2c98f"/>
+    <text x="570" y="856" font-size="12.5" font-weight="700" fill="#8a5310">3002</text>
+    <text x="570" y="876" fill="#4b5b74">碎片 #1 + 密文</text>
+
+    <rect x="728" y="832" width="160" height="68" rx="9" fill="#ffffff" stroke="#e2c98f"/>
+    <text x="742" y="856" font-size="12.5" font-weight="700" fill="#8a5310">3003</text>
+    <text x="742" y="876" fill="#4b5b74">碎片 #2 + 密文</text>
+
+    <rect x="900" y="832" width="160" height="68" rx="9" fill="#ffffff" stroke="#e2c98f"/>
+    <text x="914" y="856" font-size="12.5" font-weight="700" fill="#8a5310">3004</text>
+    <text x="914" y="876" fill="#4b5b74">碎片 #3 + 密文</text>
+
+    <rect x="1072" y="832" width="160" height="68" rx="9" fill="#ffffff" stroke="#e2c98f"/>
+    <text x="1086" y="856" font-size="12.5" font-weight="700" fill="#8a5310">3005</text>
+    <text x="1086" y="876" fill="#4b5b74">碎片 #4 + 密文</text>
+  </g>
+
+  <!-- 连线：两端 → Cloudflare -->
+  <path d="M 364 270 L 586 270" stroke="#4b5b74" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="392" y="258" font-size="11" fill="#4b5b74">wss · https://xxx.trycloudflare.com</text>
+
+  <path d="M 1180 270 L 894 270" stroke="#4b5b74" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="1152" y="258" font-size="11" fill="#4b5b74" text-anchor="end">wss · https://xxx.trycloudflare.com</text>
+
+  <!-- Cloudflare → cloudflared -->
+  <path d="M 740 442 L 740 536" stroke="#b06a1f" stroke-width="2.4" fill="none" stroke-dasharray="6 5"
+        marker-start="url(#arrowOrange)" marker-end="url(#arrowOrange)"/>
+  <text x="752" y="486" font-size="11" fill="#b06a1f">出站隧道（两端共用一条）</text>
+
+  <!-- cloudflared → 网关 -->
+  <path d="M 740 640 L 740 668" stroke="#2f7d6d" stroke-width="2.2" fill="none" marker-end="url(#arrowTeal)"/>
+  <text x="752" y="660" font-size="10.5" fill="#2f7d6d">http / ws · 127.0.0.1:8080</text>
+
+  <!-- 网关 ↔ 中继 -->
+  <path d="M 740 760 L 740 786" stroke="#b06a1f" stroke-width="2.4" fill="none"
+        marker-start="url(#arrowOrange)" marker-end="url(#arrowOrange)" stroke-dasharray="6 5"/>
+  <text x="752" y="780" font-size="10.5" fill="#b06a1f">ws ×5 · 127.0.0.1:3001~3005</text>
+
+  <!-- 底部说明 -->
+  <g filter="url(#shadow)">
+    <rect x="24" y="942" width="1552" height="44" rx="12" fill="#ffffff" stroke="#d7e1f0"/>
+  </g>
+  <text x="44" y="970" font-size="11.5" fill="#4b5b74">两端可以各自处在任何网络（公司、家里、4G/5G），只要拿到同一个公网域名和同一个房间号；服务器这台机器全程不需要浏览器，也看不到明文。</text>
+</svg>

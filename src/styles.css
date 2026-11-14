@@ -1,0 +1,112 @@
+/* 密语 SecretTalk · 浅色主题 / 移动端优先 */
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --ink: #1b2030;
+  --dim: #7b8397;
+  --line: #e6e9f0;
+  --brand: #2f5cff;
+  --brand-soft: #eef2ff;
+  --ok: #12805c;
+  --warn: #c2410c;
+  --danger: #d92d20;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); -webkit-font-smoothing: antialiased; }
+button, input { font-family: inherit; font-size: 14px; }
+button { cursor: pointer; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.app { max-width: 720px; margin: 0 auto; padding: 16px 14px calc(24px + env(safe-area-inset-bottom)); }
+
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.topbar h1 { margin: 0; font-size: 24px; letter-spacing: -.5px; }
+.topbar h1 span { font-size: 13px; font-weight: 500; color: var(--dim); letter-spacing: 0; }
+.sub { margin: 4px 0 0; font-size: 11px; color: var(--dim); }
+.badge { flex: none; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #eceef3; color: var(--dim); }
+.badge.online { background: #e4f6ee; color: var(--ok); }
+.badge.connecting { background: #fff2e8; color: var(--warn); }
+.badge.destroyed { background: #fdeceb; color: var(--danger); }
+
+/* 非安全上下文横幅：crypto.subtle 不可用时的醒目提示 */
+.insecure { background: #fff4ec; border: 1px solid #f6c9a8; border-left: 4px solid var(--warn); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; line-height: 1.6; color: #7c2d12; }
+.insecure strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.insecure p { margin: 4px 0 0; }
+.insecure code { background: #fde3d0; padding: 1px 4px; border-radius: 4px; }
+.insecure .dim { color: #9a4a22; font-size: 12px; }
+
+.links { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+.link { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 4px; text-align: center; }
+.link i { display: block; width: 9px; height: 9px; margin: 0 auto 5px; border-radius: 50%; background: #cfd4df; }
+.link.on i { background: var(--ok); box-shadow: 0 0 0 3px #d9f2e7; }
+.link span { display: block; font-size: 12px; font-weight: 600; }
+.link small { font-size: 10px; color: var(--dim); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.card label { display: block; font-size: 12px; color: var(--dim); margin: 10px 0 6px; }
+.card label:first-child { margin-top: 0; }
+.row { display: flex; gap: 8px; }
+input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; color: var(--ink); outline: none; }
+input:focus { border-color: var(--brand); background: #fff; }
+.row input { flex: 1; }
+button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px 14px; }
+button.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+button.wide { width: 100%; margin-top: 14px; padding: 12px; }
+button.ghost { background: transparent; border: none; color: var(--danger); font-size: 12px; padding: 4px 6px; }
+.pool { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.pool code { font-size: 10px; background: #f2f4f9; color: var(--dim); padding: 3px 6px; border-radius: 6px; }
+
+.sas { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--brand-soft); border-color: #dbe3ff; }
+.sas span { font-size: 12px; color: #45549c; }
+.sas strong { font-size: 20px; letter-spacing: 2px; color: var(--brand); font-variant-numeric: tabular-nums; }
+
+.notice { background: #fff4ed; border: 1px solid #ffd9c2; color: var(--warn); border-radius: 12px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+
+.chat-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.list { min-height: 180px; max-height: 46vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px; }
+.empty { color: var(--dim); font-size: 12px; line-height: 1.7; text-align: center; margin: 44px 12px; }
+.bubble { max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+.bubble span { display: block; white-space: pre-wrap; }
+.bubble small { display: block; margin-top: 5px; font-size: 10px; opacity: .65; }
+.bubble.mine { align-self: flex-end; background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.theirs { align-self: flex-start; background: #eef0f5; color: var(--ink); border-bottom-left-radius: 4px; }
+.bubble .err { color: var(--danger); font-size: 12px; }
+.composer { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.composer input { flex: 1; }
+.composer .tool { flex: none; width: 40px; padding: 0; font-size: 16px; line-height: 38px; }
+.composer .tool.recording { background: #fdeceb; border-color: var(--danger); color: var(--danger); font-size: 12px; font-weight: 600; }
+.composer input[type="file"] { display: none; }
+.recording-hint, .media-error { margin: 8px 0 0; font-size: 12px; color: var(--danger); }
+.bubble-image { display: block; max-width: 100%; max-height: 260px; border-radius: 10px; margin-bottom: 6px; }
+.bubble-audio { display: block; width: 220px; max-width: 100%; margin-bottom: 6px; }
+.bubble-file { display: inline-block; color: inherit; text-decoration: underline; word-break: break-all; }
+.bubble-file-size { font-size: 11px; opacity: .8; }
+.bubble.mine .bubble-file { color: #fff; }
+
+.log-toggle { width: 100%; text-align: left; border: none; background: transparent; font-size: 12px; color: var(--dim); padding: 0; }
+.logs pre { margin: 10px 0 0; max-height: 220px; overflow: auto; font-size: 10px; line-height: 1.7; color: #4a5468; white-space: pre-wrap; word-break: break-all; }
+
+.destroyed { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 32px 20px; text-align: center; }
+.destroyed h2 { margin: 0 0 10px; font-size: 20px; color: var(--danger); }
+.destroyed p { margin: 6px 0; font-size: 14px; }
+.destroyed .dim { color: var(--dim); font-size: 12px; line-height: 1.7; margin-bottom: 20px; }
+
+footer { text-align: center; color: var(--dim); font-size: 11px; padding: 16px 0 4px; }
+
+/* 微信 / 企业微信内置浏览器的拦截页 */
+.blocked-view { max-width: 520px; margin: 16px auto; padding: 24px 20px; }
+.blocked-view h2 { margin: 0 0 12px; font-size: 20px; color: var(--brand); }
+.blocked-view p { margin: 8px 0; font-size: 13.5px; line-height: 1.8; }
+.blocked-view .dim { color: var(--dim); font-size: 12px; }
+.blocked-url { display: block; margin: 10px 0 14px; padding: 10px 12px; border-radius: 8px; background: #f2f4f9; color: #3d4f6d; font-size: 12px; word-break: break-all; }
+
+@media (max-width: 420px) {
+  .app { padding: 12px 10px; }
+  .topbar h1 { font-size: 21px; }
+  .link span { font-size: 11px; }
+  .sas strong { font-size: 18px; }
+}

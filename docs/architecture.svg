@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"
+     font-family="Microsoft YaHei, PingFang SC, Noto Sans SC, Source Han Sans SC, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5a6b85"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a6a1f"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#23324d" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#f4f7fb"/>
+
+  <!-- 标题 -->
+  <text x="48" y="60" font-size="30" font-weight="700" fill="#16233a">密语 SecretTalk · 架构总览</text>
+  <text x="48" y="90" font-size="14" fill="#5b6b82">端到端加密聊天：单端口网关 + 5 台互不通信的零知识中继；密钥只在两端浏览器</text>
+  <g transform="translate(1310,34)">
+    <rect width="242" height="34" rx="17" fill="#e8f2ec" stroke="#bcd9c7"/>
+    <text x="121" y="22" text-anchor="middle" font-size="12.5" fill="#2f6b48">🔒 中继零知识 · 不持有任何密钥</text>
+  </g>
+
+  <!-- ============ 客户端 A ============ -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="120" width="460" height="420" rx="18" fill="#ffffff" stroke="#cfd9ea"/>
+  </g>
+  <rect x="40" y="120" width="8" height="420" rx="4" fill="#2b59ff"/>
+  <text x="64" y="156" font-size="20" font-weight="700" fill="#1c3fa8">客户端 A · 浏览器</text>
+  <text x="64" y="180" font-size="12" fill="#6b7a92">进入房间即自动推导方向（A / B），无需选择</text>
+
+  <rect x="60" y="196" width="420" height="64" rx="12" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="76" y="222" font-size="14" font-weight="700" fill="#1c3fa8">React UI</text>
+  <text x="76" y="243" font-size="12.5" fill="#4b5b74">输入房间号 → 进入会话 → 消息气泡（我 / 对方）</text>
+
+  <rect x="60" y="272" width="420" height="86" rx="12" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="76" y="296" font-size="14" font-weight="700" fill="#1c3fa8">RelayClient</text>
+  <text x="76" y="318" font-size="12.5" fill="#4b5b74">5 路 WebSocket · 10 秒心跳 · 断线即销毁</text>
+  <text x="76" y="338" font-size="12.5" fill="#4b5b74">碎片聚合：按 messageId 分桶，任意 3 片即解密</text>
+
+  <rect x="60" y="370" width="420" height="150" rx="12" fill="#eef3ff" stroke="#c6d5ff"/>
+  <text x="76" y="394" font-size="14" font-weight="700" fill="#1c3fa8">CryptoSession（全部密码学在此）</text>
+  <text x="76" y="416" font-size="12.5" fill="#3d4f6d">ECDH P-256 密钥对 · 私钥不出内存</text>
+  <text x="76" y="436" font-size="12.5" fill="#3d4f6d">HKDF-SHA256(roomId) → KEK</text>
+  <text x="76" y="456" font-size="12.5" fill="#3d4f6d">每条消息随机 AES-256-GCM msgKey</text>
+  <text x="76" y="476" font-size="12.5" fill="#3d4f6d">SSS(3,5) 拆 5 片，各自用 KEK 加密</text>
+  <text x="76" y="496" font-size="12.5" fill="#3d4f6d">6 位安全数：双方线下核对，防中继 MITM</text>
+
+  <!-- ============ 客户端 B ============ -->
+  <g filter="url(#shadow)">
+    <rect x="1100" y="120" width="460" height="420" rx="18" fill="#ffffff" stroke="#cfd9ea"/>
+  </g>
+  <rect x="1552" y="120" width="8" height="420" rx="4" fill="#2b59ff"/>
+  <text x="1124" y="156" font-size="20" font-weight="700" fill="#1c3fa8">客户端 B · 浏览器</text>
+  <text x="1124" y="180" font-size="12" fill="#6b7a92">与 A 完全对称：谁发谁收由角色自动决定</text>
+
+  <rect x="1120" y="196" width="420" height="64" rx="12" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="1136" y="222" font-size="14" font-weight="700" fill="#1c3fa8">React UI</text>
+  <text x="1136" y="243" font-size="12.5" fill="#4b5b74">输入房间号 → 进入会话 → 消息气泡（我 / 对方）</text>
+
+  <rect x="1120" y="272" width="420" height="86" rx="12" fill="#f8faff" stroke="#dbe3f6"/>
+  <text x="1136" y="296" font-size="14" font-weight="700" fill="#1c3fa8">RelayClient</text>
+  <text x="1136" y="318" font-size="12.5" fill="#4b5b74">5 路 WebSocket · 10 秒心跳 · 断线即销毁</text>
+  <text x="1136" y="338" font-size="12.5" fill="#4b5b74">碎片聚合：按 messageId 分桶，任意 3 片即解密</text>
+
+  <rect x="1120" y="370" width="420" height="150" rx="12" fill="#eef3ff" stroke="#c6d5ff"/>
+  <text x="1136" y="394" font-size="14" font-weight="700" fill="#1c3fa8">CryptoSession（全部密码学在此）</text>
+  <text x="1136" y="416" font-size="12.5" fill="#3d4f6d">ECDH P-256 密钥对 · 私钥不出内存</text>
+  <text x="1136" y="436" font-size="12.5" fill="#3d4f6d">HKDF-SHA256(roomId) → KEK</text>
+  <text x="1136" y="456" font-size="12.5" fill="#3d4f6d">每条消息随机 AES-256-GCM msgKey</text>
+  <text x="1136" y="476" font-size="12.5" fill="#3d4f6d">SSS(3,5) 拆 5 片，各自用 KEK 加密</text>
+  <text x="1136" y="496" font-size="12.5" fill="#3d4f6d">6 位安全数：双方线下核对，防中继 MITM</text>
+
+  <!-- ============ 网关 ============ -->
+  <g filter="url(#shadow)">
+    <rect x="620" y="120" width="360" height="176" rx="16" fill="#fff8ec" stroke="#efcf9a"/>
+  </g>
+  <text x="644" y="152" font-size="17" font-weight="700" fill="#8a5310">单端口网关</text>
+  <text x="644" y="172" font-size="11.5" fill="#a07a3a">:5173（本地） / $PORT（云平台）</text>
+  <text x="644" y="198" font-size="12.5" fill="#6d5220">TLS 终结：https / wss</text>
+  <text x="644" y="220" font-size="12.5" fill="#6d5220">静态站点 dist/web + 严格 CSP</text>
+  <text x="644" y="242" font-size="12.5" fill="#6d5220">/relay/0~4 字节管道（保留文本帧）</text>
+  <text x="644" y="264" font-size="12.5" fill="#6d5220">不解析内容 · 不缓存 · 不落盘</text>
+  <text x="644" y="284" font-size="11.5" fill="#a07a3a">零知识边界从这里开始</text>
+
+  <!-- A → 网关 -->
+  <path d="M 500 240 L 612 200" stroke="#5a6b85" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="516" y="202" font-size="12" fill="#5a6b85">wss ×5</text>
+  <text x="516" y="218" font-size="10.5" fill="#8796ad">/relay/0~4</text>
+
+  <!-- B → 网关 -->
+  <path d="M 1100 240 L 988 200" stroke="#5a6b85" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <text x="1096" y="202" font-size="12" fill="#5a6b85" text-anchor="end">wss ×5</text>
+  <text x="1096" y="218" font-size="10.5" fill="#8796ad" text-anchor="end">/relay/0~4</text>
+
+  <!-- 网关 ↔ 中继 -->
+  <path d="M 794 300 L 794 372" stroke="#8a6a1f" stroke-width="2.4" fill="none"
+        marker-start="url(#arrowDash)" marker-end="url(#arrowDash)" stroke-dasharray="6 5"/>
+  <text x="808" y="326" font-size="12" fill="#8a6a1f">ws ×5</text>
+  <text x="808" y="342" font-size="10.5" fill="#a08a55">127.0.0.1:3001~3005</text>
+
+  <!-- ============ 中继 ============ -->
+  <g>
+    <rect x="540" y="380" width="520" height="430" rx="18" fill="#fffdf4" stroke="#e6d3a2" stroke-dasharray="7 6"/>
+    <text x="564" y="412" font-size="15" font-weight="700" fill="#8a6a1f">5 台零知识中继（独立进程 · 互不通信）</text>
+    <text x="564" y="432" font-size="11.5" fill="#a08a55">PM2 fork 或单容器内 5 个子进程 · 内存房间 TTL 5 分钟</text>
+
+    <g font-size="13">
+      <rect x="560" y="448" width="480" height="54" rx="10" fill="#ffffff" stroke="#e2c98f"/>
+      <text x="578" y="480" font-size="13.5" font-weight="700" fill="#8a5310">3001</text>
+      <text x="636" y="470" font-size="12.5" fill="#4b5b74">只存碎片 #0（KEK 加密）</text>
+      <text x="636" y="489" font-size="12.5" fill="#4b5b74">+ 同一份消息密文副本</text>
+      <text x="1000" y="480" font-size="11" fill="#b08a4a">TTL 5 min</text>
+
+      <rect x="560" y="512" width="480" height="54" rx="10" fill="#ffffff" stroke="#e2c98f"/>
+      <text x="578" y="544" font-size="13.5" font-weight="700" fill="#8a5310">3002</text>
+      <text x="636" y="534" font-size="12.5" fill="#4b5b74">只存碎片 #1（KEK 加密）</text>
+      <text x="636" y="553" font-size="12.5" fill="#4b5b74">+ 同一份消息密文副本</text>
+
+      <rect x="560" y="576" width="480" height="54" rx="10" fill="#ffffff" stroke="#e2c98f"/>
+      <text x="578" y="608" font-size="13.5" font-weight="700" fill="#8a5310">3003</text>
+      <text x="636" y="598" font-size="12.5" fill="#4b5b74">只存碎片 #2（KEK 加密）</text>
+      <text x="636" y="617" font-size="12.5" fill="#4b5b74">+ 同一份消息密文副本</text>
+
+      <rect x="560" y="640" width="480" height="54" rx="10" fill="#ffffff" stroke="#e2c98f"/>
+      <text x="578" y="672" font-size="13.5" font-weight="700" fill="#8a5310">3004</text>
+      <text x="636" y="662" font-size="12.5" fill="#4b5b74">只存碎片 #3（KEK 加密）</text>
+      <text x="636" y="681" font-size="12.5" fill="#4b5b74">+ 同一份消息密文副本</text>
+
+      <rect x="560" y="704" width="480" height="54" rx="10" fill="#ffffff" stroke="#e2c98f"/>
+      <text x="578" y="736" font-size="13.5" font-weight="700" fill="#8a5310">3005</text>
+      <text x="636" y="726" font-size="12.5" fill="#4b5b74">只存碎片 #4（KEK 加密）</text>
+      <text x="636" y="745" font-size="12.5" fill="#4b5b74">+ 同一份消息密文副本</text>
+    </g>
+
+    <text x="564" y="788" font-size="11.5" fill="#a08a55">每台都：无 crypto 模块 · 只做形状校验 · 原样转发（再经网关送达对端）</text>
+  </g>
+
+  <!-- 中继 → 客户端 B：语义上经网关，这里不再画直连箭头，避免误导 -->
+
+  <!-- 底部说明 -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="846" width="1520" height="112" rx="16" fill="#ffffff" stroke="#d7e1f0"/>
+  </g>
+  <text x="64" y="876" font-size="13.5" font-weight="700" fill="#16233a">数据怎么走</text>
+  <text x="64" y="900" font-size="12.5" fill="#4b5b74">① 明文在本地加密 → ② 5 个碎片分别发往 5 台（第 i 片只发第 i 台）→ ③ 网关仅做 TLS 与字节管道 →</text>
+  <text x="64" y="920" font-size="12.5" fill="#4b5b74">④ 中继各存 1 片并转发 → ⑤ 对端收满任意 3 片重组解密、校验通过后展示并回 ACK → ⑥ 任一方退出/断线，5 台清缓存、两端密钥 0 覆写</text>
+
+  <g font-size="11.5" fill="#6b7a92">
+    <line x1="64" y1="941" x2="110" y2="941" stroke="#5a6b85" stroke-width="2.2" marker-end="url(#arrow)"/>
+    <text x="118" y="945">密文流量（wss / ws）</text>
+    <line x1="300" y1="941" x2="346" y2="941" stroke="#8a6a1f" stroke-width="2.2" stroke-dasharray="6 5" marker-start="url(#arrowDash)" marker-end="url(#arrowDash)"/>
+    <text x="354" y="945">本机回环链路（127.0.0.1）</text>
+    <text x="560" y="945">服务器可见：roomId · messageId · 碎片下标 · 长度 · 时间 · IP　｜　不可见：明文 · msgKey · KEK · ECDH 私钥</text>
+  </g>
+</svg>

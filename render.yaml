@@ -1,0 +1,16 @@
+# 免费 PaaS 一键部署（Render Blueprint）
+# 用法：把仓库推到 GitHub → Render 控制台 New → Blueprint → 选这个仓库 → Apply
+# 说明：单容器内跑 5 个中继子进程 + 1 个网关（同机，属演示级隔离，详见 README「上线部署」）
+services:
+  - type: web
+    name: secrettalk
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build && npm run build:server
+    startCommand: node scripts/cloud-start.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
