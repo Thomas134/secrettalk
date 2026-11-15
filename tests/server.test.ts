@@ -130,6 +130,16 @@ describe('6. 零知识中继服务器', () => {
     expect((await a.waitFor('ack')).messageId).toBe('msg-ack-1');
   });
 
+  it('语音通话信令原样转发给对方，不回给发送方', async () => {
+    const { a, b } = await joinPair(cluster.urls[0], 'rtc-room');
+    openClients.push(a, b);
+    const signal = { callId: 'call-1', kind: 'offer', sdp: 'v=0\r\no=- 1 1 IN IP4 127.0.0.1\r\n' };
+    a.send({ type: 'rtc', roomId: 'rtc-room', signal });
+    const got = await b.waitFor('rtc');
+    expect(got.signal).toEqual(signal);
+    expect(a.frames.filter((f) => f.type === 'rtc')).toHaveLength(0);
+  });
+
   it('投错端口的碎片被拒绝（路由下标校验，非密码学检查）', async () => {
     const a = track(await connectClient(cluster.urls[4]));
     a.send({ type: 'hello', roomId: 'wrong', publicKey: 'K' });

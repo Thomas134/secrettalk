@@ -22,6 +22,7 @@ import {
   type ClientFrame,
   type ExitReason,
   type Role,
+  type RtcSignal,
   type ServerFrame,
 } from '../shared/protocol.js';
 import { CryptoSession, SecretTalkError, toB64, type DecryptedMessage, type OutgoingAttachment } from './crypto.js';
@@ -80,6 +81,8 @@ export interface RelayEvents {
    */
   onRole?: (role: Role) => void;
   onPeerReady?: (safetyNumber: string) => void;
+  /** WebRTC 语音通话信令（offer / answer / ice / hangup / reject） */
+  onRtc?: (signal: RtcSignal) => void;
   onMessage?: (message: MessageView) => void;
   onMessageStatus?: (messageId: string, status: MessageStatus) => void;
   onDestroyed?: (reason: ExitReason) => void;
@@ -362,6 +365,13 @@ export class RelayClient {
           break;
         }
 
+        case 'rtc': {
+          // 语音通话信令：交给上层 VoiceCall 处理，不参与消息加密
+          if (frame.roomId !== this.roomId) break;
+          this.events.onRtc?.(frame.signal);
+          break;
+        }
+
         case 'pong':
           this.links[index].lastPongAt = Date.now();
           break;
@@ -501,6 +511,12 @@ export class RelayClient {
       this.events.onMessageStatus?.(messageId, 'failed');
       throw e;
     }
+  }
+
+  /** 发送一条语音通话信令：只需走一条链路（严格模式下任一路断开都会销毁会话） */
+  sendRtc(signal: RtcSignal): boolean {
+    if (this.destroyed) return false;
+    return this.sendOn(0, { type: 'rtc', roomId: this.roomId, signal });
   }
 
   /* ====================================================================== *

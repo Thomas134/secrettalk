@@ -282,6 +282,26 @@ export async function startRelayServer(options: RelayServerOptions = {}): Promis
         break;
       }
 
+      case 'rtc': {
+        // 语音通话信令：只做形状检查并原样转发，不解析 SDP/ICE（与消息加密无关）
+        const signal = frame.signal;
+        const kind = signal && typeof signal === 'object' ? (signal as { kind?: unknown }).kind : undefined;
+        const okKind = kind === 'offer' || kind === 'answer' || kind === 'ice' || kind === 'hangup' || kind === 'reject';
+        if (!signal || typeof signal !== 'object' ||
+            typeof (signal as { callId?: unknown }).callId !== 'string' || !okKind) {
+          send(peer, { type: 'error', code: 'BAD_RTC', message: '通话信令不合法' });
+          return;
+        }
+        if (frame.roomId !== peer.roomId) {
+          send(peer, { type: 'error', code: 'ROOM_MISMATCH', message: '房间号不匹配' });
+          return;
+        }
+        const rtcRoom = rooms.get(frame.roomId);
+        if (!rtcRoom) return;
+        broadcast(rtcRoom, { type: 'rtc', roomId: frame.roomId, signal, via: port }, peer);
+        break;
+      }
+
       case 'force_exit': {
         // 收到任一方的退出指令：立刻清本进程缓存，并通知另一方
         destroyRoom(frame.roomId, frame.reason);

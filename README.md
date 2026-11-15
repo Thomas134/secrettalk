@@ -13,6 +13,8 @@
 
 一句话流程：**明文在两端浏览器内加密 → 5 个碎片分别发往 5 台中继 → 网关只做 TLS 与字节转发 → 对端收满任意 3 片重组解密、校验通过后回 ACK**。中继全程只见 base64 密文，KEK / msgKey / ECDH 私钥从未离开浏览器。
 
+> 另有一条**独立**的实时通道：**语音通话走 WebRTC P2P**（浏览器强制 DTLS-SRTP 加密），信令借中继转发，媒体流不经过 5 台孤岛，也不套用上面的 SSS/AES-GCM 封装。
+
 **关键约束**：5 个 Node.js 进程之间没有任何 IPC、共享内存、数据库或文件交换。每个进程的房间表是闭包局部变量（`startRelayServer` 内），因此即便测试在同一进程里拉起 5 个实例，它们也不会共享任何状态。
 
 ---
@@ -44,7 +46,7 @@
 
 > **注意**：`shamir-secret-sharing` 的 `combine()` 不会校验门限——喂 2 片它会「成功」返回一段长度合法但错误的 32 字节。因此前端必须先做 `size >= 3` 检查，再靠 GCM 兜底。测试里专门覆盖了这一点。
 
-### 附件（语音 / 图片 / 文件）
+### 附件（语音消息 / 图片 / 文件）
 
 附件和文字走同一条加密通道，没有独立的「文件服务器」：
 
@@ -64,6 +66,16 @@
 ![文本/录音/图片/文件的加密流水线](docs/encryption-pipeline.svg)
 
 > 矢量原图：[docs/encryption-pipeline.svg](docs/encryption-pipeline.svg)；位图：[docs/encryption-pipeline.png](docs/encryption-pipeline.png)。
+
+### 语音通话（WebRTC P2P）
+
+和「语音消息」是两件事：语音消息走上面的 5 路加密通道；**语音通话是实时媒体流**。
+
+- **信令**（offer / answer / ICE / hangup / reject）通过现有中继原样转发，中继能看到 SDP 与 ICE 候选（含 IP），但**看不到声音**；
+- **媒体**走 WebRTC P2P，由浏览器强制 **DTLS-SRTP** 加密，不经过 5 台中继；
+- 本阶段**没有**接入应用层 E2E 封装（不套 SSS/AES-GCM），UI 上标注为「WebRTC P2P，不经过中继」；
+- 只使用公共 STUN（Cloudflare / Google），**没有 TURN**：对称 NAT / 严格公司网络下可能连不通，会明确报错；
+- UI 支持：呼叫 / 接听 / 拒绝 / 忙线提示 / 静音 / 挂断 / 通话计时；同一时间只保留一路通话。
 
 ---
 
@@ -88,6 +100,8 @@ SecretTalk/
 ├── src/
 │   ├── crypto.ts               # ① 密码学核心（ECDH/HKDF/AES-GCM/SSS/擦除）
 │   ├── relay.ts                # ② 5 路 WebSocket 管理（分发/聚合/ACK/心跳/自毁）
+│   ├── voice.ts                # ⑤ WebRTC 语音通话（P2P，DTLS-SRTP）
+│   ├── media.ts                # 附件压缩 / 读取
 │   ├── App.tsx                 # 移动端优先的 React UI
 │   ├── main.tsx
 │   └── styles.css
@@ -95,7 +109,7 @@ SecretTalk/
 ├── tests/
 │   ├── helpers.ts              # 拉起 N 台真实 ws 实例 + Node 端 WebSocket 工厂
 │   ├── crypto.test.ts          # ④ 密码学单元测试（20 例）
-│   ├── server.test.ts          # ④ 中继行为测试（13 例）
+│   ├── server.test.ts          # ④ 中继行为测试（14 例）
 │   ├── gateway.test.ts         # ④ 单端口网关测试（11 例）
 │   ├── ua.test.ts              # ④ 内置浏览器识别（4 例）
 │   └── e2e.test.ts             # ④ 端到端流程测试（8 例）
@@ -181,7 +195,7 @@ npm run dev            # Vite 开发服务器（http://localhost:5173，热更�
 npm run start:pm2      # 只编译后端并起 6 个进程（不重新构建前端）
 npm run build          # 前端产物 dist/web/
 npm run build:server   # 后端产物 dist/server/server.js + dist/shared/protocol.js
-npm test               # 56 个用例
+npm test               # 57 个用例
 ```
 
 **只起一台（调试用）**：
@@ -220,12 +234,12 @@ PORT=3003 RELAY_INDEX=2 node dist/server/server.js
 `npm test` 会真实拉起 5 个 `ws` 服务实例（用 `port: 0` 由系统分配端口，避免占用），跑真实 WebCrypto，**不使用任何 mock**：
 
 - `crypto.test.ts`（20 例）：Base64 往返与类型、0 覆写、SSS 全部 10 种 3 片组合、2 片无法还原、ECDH/SAS 一致性、任意 3 路解密、碎片篡改、AAD 跨端口重放、密文篡改、跨消息碎片混用、房间/KEK 隔离、destroy 后禁用、raw AES 密钥即时擦除、附件字节级往返、超大附件拒绝。
-- `server.test.ts`（13 例）：源码级零知识断言、5 实例状态隔离、心跳、公钥双向转发、密文转发、pull 拉取、ACK 转发、错误端口拒绝、第三人被拒（ROOM_FULL）、force_exit 清缓存、close 清缓存、TTL 过期、close 后端口可复用。
+- `server.test.ts`（14 例）：源码级零知识断言、5 实例状态隔离、心跳、公钥双向转发、密文转发、pull 拉取、ACK 转发、语音通话信令转发、错误端口拒绝、第三人被拒（ROOM_FULL）、force_exit 清缓存、close 清缓存、TTL 过期、close 后端口可复用。
 - `gateway.test.ts`（11 例）：微信内置浏览器拦截（403 / WS 拒绝 / 可关闭）、`/relay/{i}` 路由、**文本帧保持文本帧**（防止浏览器拿到 Blob）、ping/pong 透传、越界路径拒绝、断开语义穿透、静态站点与安全头、目录穿越防护、TLS 同端口。
 - `ua.test.ts`（4 例）：微信 / 企业微信 / 微信桌面版的 UA 识别，以及普通浏览器与空 UA 不误伤。
 - `e2e.test.ts`（8 例）：附件经 5 路中继完整送达、只填同一房间号即可入房 + 角色自动推导 + 双向收发、完整「A 发 5 片 → B 收 3 片解密 → ACK 已读去重 → force_exit 全链路自毁」、仅 3 台中继在线仍可解密、断线触发 force_exit 并清空 5 台缓存、完整性失败不误报已读、后台标签页收不到 pong 不误判心跳超时、前台仍会正常判死。
 
-当前结果：`5 files / 56 tests passed`，前后端 `tsc --noEmit` 均通过，前后端构建通过，5 实例 + `env.PORT` 冒烟通过，浏览器（两个标签页）真实互通 + 图片/语音收发验证通过。
+当前结果：`5 files / 57 tests passed`，前后端 `tsc --noEmit` 均通过，前后端构建通过，5 实例 + `env.PORT` 冒烟通过，浏览器（两个标签页）真实互通 + 图片/语音消息 + WebRTC 语音通话验证通过。
 
 ---
 

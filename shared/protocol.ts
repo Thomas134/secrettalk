@@ -44,6 +44,28 @@ export const MAX_ATTACHMENT_BYTES = 4 * 1024 * 1024;
 export const MAX_VOICE_MS = 60_000;
 
 /**
+ * WebRTC 语音通话信令。
+ * 【说明】它和消息加密体系无关：中继只是把 JSON 原样转给对方（零知识边界不变），
+ * 真正的语音媒体流是 P2P 的 DTLS-SRTP，不经过中继。
+ * 本阶段不做应用层 E2E 封装，因此中继能看到 SDP 与 ICE 候选（含 IP），但看不到声音。
+ */
+export type RtcSignal =
+  | { callId: string; kind: 'offer'; sdp: string }
+  | { callId: string; kind: 'answer'; sdp: string }
+  | {
+    callId: string;
+    kind: 'ice';
+    candidate: {
+      candidate: string;
+      sdpMid: string | null;
+      sdpMLineIndex: number | null;
+      usernameFragment?: string | null;
+    };
+  }
+  | { callId: string; kind: 'hangup' }
+  | { callId: string; kind: 'reject'; reason?: string };
+
+/**
  * 会话内的「方向标签」。
  * 【不再由用户选择】网页端已经删掉 A / B 选项：两端只要填同一个房间号即可入房。
  * 双方交换 ECDH 公钥后，各自在本地按「公钥字节字典序」比较：
@@ -106,6 +128,8 @@ export type ClientFrame =
   | { type: 'cipher'; packet: CipherPacket }
   /** 已读回执：B 解密校验成功后发出，服务器原样转发给 A */
   | { type: 'ack'; roomId: string; messageId: string; to: Role }
+  /** WebRTC 语音通话信令（offer / answer / ice / hangup / reject），中继原样转发 */
+  | { type: 'rtc'; roomId: string; signal: RtcSignal }
   /** 强制退出指令：任一方主动退出或断线时向所有服务器广播 */
   | { type: 'force_exit'; roomId: string; reason: ExitReason };
 
@@ -121,6 +145,8 @@ export type ServerFrame =
   | { type: 'cached'; packets: CipherPacket[]; via: number }
   /** 转发已读回执 */
   | { type: 'ack'; roomId: string; messageId: string; via: number }
+  /** 转发通话信令 */
+  | { type: 'rtc'; roomId: string; signal: RtcSignal; via: number }
   | { type: 'pong'; ts: number; via: number }
   /** 通知另一方：会话必须立即销毁 */
   | { type: 'force_exit'; roomId: string; reason: ExitReason; via: number }
@@ -148,5 +174,5 @@ export function isClientFrame(v: unknown): v is ClientFrame {
   if (!v || typeof v !== 'object') return false;
   const t = (v as { type?: unknown }).type;
   return t === 'hello' || t === 'ping' || t === 'pull' || t === 'cipher' ||
-         t === 'ack' || t === 'force_exit';
+         t === 'ack' || t === 'rtc' || t === 'force_exit';
 }

@@ -28,6 +28,7 @@ import {
   prepareVoice,
   type OutgoingMedia,
 } from './media.js';
+import { VoiceCall, type VoiceState } from './voice.js';
 import './styles.css';
 
 const EXIT_TEXT: Record<ExitReason, string> = {
@@ -38,6 +39,19 @@ const EXIT_TEXT: Record<ExitReason, string> = {
   beforeunload: '页面关闭或刷新',
   integrity_failure: '完整性校验失败',
 };
+
+/** 语音通话状态文案 */
+function voiceStatusText(state: VoiceState, detail: string, secs: number): string {
+  switch (state) {
+    case 'calling': return '正在呼叫对方…';
+    case 'ringing': return '对方邀请你进行语音通话';
+    case 'connecting': return '正在建立 P2P 连接…';
+    case 'active': return `通话中 ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+    case 'error': return detail || '通话失败';
+    case 'ended': return detail || '通话已结束';
+    default: return '';
+  }
+}
 
 export default function App() {
   const clientRef = useRef<RelayClient | null>(null);
@@ -72,6 +86,14 @@ export default function App() {
   const [recording, setRecording] = useState(false);
   const [recordSecs, setRecordSecs] = useState(0);
   const [mediaNotice, setMediaNotice] = useState('');
+
+  /* ---------------- WebRTC 语音通话 ---------------- */
+  const voiceRef = useRef<VoiceCall | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [voiceDetail, setVoiceDetail] = useState('');
+  const [voiceMuted, setVoiceMuted] = useState(false);
+  const [callSecs, setCallSecs] = useState(0);
 
   /** 非安全上下文下 crypto.subtle 不存在，此时直接给出可读提示并禁止进入会话 */
   const insecureReason = useMemo(() => webCryptoUnavailableReason(), []);
@@ -149,6 +171,7 @@ export default function App() {
             pushLog(`安全数 ${n} 已生成，请与对方线下核对`);
           },
           onMessage: (m) => upsertMessage(m),
+          onRtc: (signal) => { void voiceRef.current?.handleSignal(signal); },
           onMessageStatus: (id, st: MessageStatus) => {
             setMessages((prev) => prev.map((m) => (m.messageId === id ? { ...m, status: st } : m)));
           },
@@ -159,6 +182,12 @@ export default function App() {
             setMessages([]);
             setSafetyNumber(null);
             setMyRole(null);
+            voiceRef.current?.dispose();
+            voiceRef.current = null;
+            setVoiceState('idle');
+            setVoiceDetail('');
+            setCallSecs(0);
+            setVoiceMuted(false);
             setLinks((prev) => prev.map((l) => ({ ...l, connected: false })));
             clientRef.current = null;
             pushLog(`会话已销毁：${EXIT_TEXT[reason]}`);
@@ -168,6 +197,26 @@ export default function App() {
         },
       );
       clientRef.current = c;
+
+      // 语音通话只依赖中继转发信令，媒体走 P2P；与消息加密体系互相独立
+      voiceRef.current?.dispose();
+      voiceRef.current = new VoiceCall({
+        send: (signal) => { c.sendRtc(signal); },
+        onState: (state, detail) => {
+          setVoiceState(state);
+          setVoiceDetail(detail ?? '');
+          if (state === 'ended' || state === 'error') setVoiceMuted(false);
+          if (detail) pushLog(`语音通话：${detail}`);
+        },
+        onRemoteStream: (stream) => {
+          if (remoteAudioRef.current) remoteAudioRef.current.srcObject = stream;
+        },
+      });
+      setVoiceState('idle');
+      setVoiceDetail('');
+      setCallSecs(0);
+      setVoiceMuted(false);
+
       pushLog(`房间 ${roomId} 已创建，正在连接 ${servers.length} 台孤岛中继`);
     } catch (e) {
       setNotice((e as Error).message);
@@ -311,6 +360,31 @@ export default function App() {
   const connected = links.filter((l) => l.connected).length;
   const destroyed = status === 'destroyed';
   const canSend = status === 'online' && safetyNumber !== null && !destroyed;
+  const callBusy = voiceState === 'calling' || voiceState === 'ringing' || voiceState === 'connecting';
+  const callActive = voiceState === 'active';
+
+  const startCall = useCallback(() => {
+    if (!canSend || callBusy || callActive) return;
+    void voiceRef.current?.startCall();
+  }, [canSend, callBusy, callActive]);
+  const acceptCall = useCallback(() => { void voiceRef.current?.acceptCall(); }, []);
+  const rejectCall = useCallback(() => { voiceRef.current?.rejectCall(); }, []);
+  const hangupCall = useCallback(() => { voiceRef.current?.hangup(); }, []);
+  const toggleMute = useCallback(() => {
+    setVoiceMuted(voiceRef.current?.toggleMute() ?? false);
+  }, []);
+  const dismissCall = useCallback(() => {
+    setVoiceState('idle');
+    setVoiceDetail('');
+    setCallSecs(0);
+  }, []);
+
+  // 通话计时：只在 active 状态走秒
+  useEffect(() => {
+    if (voiceState !== 'active') { setCallSecs(0); return; }
+    const timer = setInterval(() => setCallSecs((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [voiceState]);
 
   /** 微信内置浏览器：不渲染任何会话 UI，也不创建 RelayClient（因此不会生成密钥） */
   if (blockedWebView.blocked) {
@@ -418,8 +492,44 @@ export default function App() {
           <section className="card chat">
             <div className="chat-head">
               <span>消息</span>
-              <button className="ghost" onClick={exit} disabled={status === 'idle'}>退出并销毁</button>
+              <div className="chat-actions">
+                <button
+                  className="ghost call-btn"
+                  onClick={startCall}
+                  disabled={!canSend || callBusy || callActive}
+                  title="语音通话（WebRTC P2P，不经过中继）"
+                >📞 语音</button>
+                <button className="ghost" onClick={exit} disabled={status === 'idle'}>退出并销毁</button>
+              </div>
             </div>
+
+            {voiceState !== 'idle' && (
+              <div className={`call-bar ${voiceState}`}>
+                <span className="call-status">{voiceStatusText(voiceState, voiceDetail, callSecs)}</span>
+                <div className="call-actions">
+                  {voiceState === 'ringing' && (
+                    <>
+                      <button className="primary" onClick={acceptCall}>接听</button>
+                      <button onClick={rejectCall}>拒绝</button>
+                    </>
+                  )}
+                  {(voiceState === 'calling' || voiceState === 'connecting') && (
+                    <button onClick={hangupCall}>取消</button>
+                  )}
+                  {voiceState === 'active' && (
+                    <>
+                      <button onClick={toggleMute}>{voiceMuted ? '取消静音' : '静音'}</button>
+                      <button className="danger" onClick={hangupCall}>挂断</button>
+                    </>
+                  )}
+                  {(voiceState === 'ended' || voiceState === 'error') && (
+                    <button onClick={dismissCall}>关闭</button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <audio ref={remoteAudioRef} autoPlay playsInline hidden />
             <div className="list">
               {messages.length === 0 && <p className="empty">尚无消息。文字、语音、图片、文件都会先在本地加密，再拆成 5 个碎片投递到 5 台孤岛中继。</p>}
               {messages.map((m) => (
